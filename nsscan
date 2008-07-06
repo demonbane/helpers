@@ -10,7 +10,7 @@ fi
 while [ ! -z $1 ]; do
 	case "$1" in
 		"-h")
-			echo "$0 [-x] [name|ip]"
+			echo "`basename $0` [-x|-d] <name|ip>"
 			exit 1
 			;;
 		"-d")
@@ -24,13 +24,17 @@ while [ ! -z $1 ]; do
 				echo "Invalid option \"$1\", aborting."
 				exit 1
 			fi
-			query=$1
+			query="$query $1"
+			if [ $debug ]; then
+				echo "query = $query"
+				#echo "\$@ = $@"
+			fi
 			;;
 	esac
 	shift
 done
 
-if [ -z $query ]; then
+if [ -z "$query" ]; then
 	echo "$errormsg"
 	exit 1
 fi
@@ -41,7 +45,7 @@ for i in `seq 0 5`; do
 	if [ $debug ]; then
 		echo "executing: \"$cmdline\""
 	fi
-	answer=`$cmdline`
+	answer="`$cmdline`"
 	if [ -z "$answer" ]; then
 		answer="no response"
 	fi
