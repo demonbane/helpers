@@ -1,0 +1,37 @@
+#!/bin/bash
+
+if [ -z "$1" ]; then
+	SEARCHDIR="./"
+else
+	SEARCHDIR="$1"
+fi
+
+if [ ! -d "$SEARCHDIR" ]; then
+	echo "Invalid directory. Aborting."
+	exit 1
+fi
+
+du -xb --max-depth=1 "$SEARCHDIR" | sort -g | gawk '{
+	size=$1
+	count=0
+
+	while (size > 1023) {
+		count++
+		size=size/1024
+	}
+
+	if (count==3)
+		suff="GB"
+	else if (count==2)
+		suff="MB"
+	else if (count==1)
+		suff="KB"
+	else
+		suff="B"
+
+	printf("%6.1f %s\t", size, suff)
+
+	for (i=2; i <= NF; i++)
+		printf("%s ", $i)
+	print ""
+}'
