@@ -1,5 +1,9 @@
 #!/bin/bash
 
+if ! DUCMD=`which gdu`; then
+	DUCMD=`which du` || exit 1
+fi
+
 if [ -z "$1" ]; then
 	SEARCHDIR="./"
 else
@@ -11,7 +15,7 @@ if [ ! -d "$SEARCHDIR" ]; then
 	exit 1
 fi
 
-du -xb --max-depth=1 "$SEARCHDIR" | sort -g | gawk '{
+"$DUCMD" -xb --max-depth=1 "$SEARCHDIR" | sort -g | gawk '{
 	size=$1
 	count=0
 
