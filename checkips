@@ -1,0 +1,72 @@
+#!/bin/bash
+
+# checkips - Test subnet for responsive IP addresses.
+# (c) 2006 Alex Malinovich (demonbane@the-love-shack.net)
+# Released under the GPL
+# See www.fsf.org for a full copy of the GPL.
+
+if [ "$1" == "" ] || [ "$1" == "-h" ] || [ "$1" == "--help" ] || 
+[ "$1" == "--usage" ]; then
+	echo "Usage: checkips <SUBNET> [<STARTRANGE>] [<ENDRANGE>]"
+	echo "       SUBNET - Subnet as THREE octets (i.e. xxx.xxx.xxx)"
+	echo "       STARTRANGE - Beginning IP"
+	echo "       ENDRANGE - Ending IP"
+	echo ""
+	echo "Examples:"
+	echo "       checkips 172.16.0"
+	echo "           Use all defaults. Will check range from 172.16.0.1"
+	echo "           through 172.16.0.254"
+	echo "       checkips 172.16.0 235"
+	echo "           Use default end range. Will check range from"
+	echo "           172.16.0.235 through 172.16.0.254"
+	echo "       checkips 192.168.123 70 80"
+	echo "           Will check range from 192.168.123.70 through 192.168.123.80"
+	echo ""
+	exit 0
+else
+	SUBNET=$1
+fi
+
+if [ "$2" == "" ] || [ "$2" == 0 ]; then
+	STARTIP=1
+else
+	STARTIP=$2
+fi
+
+if [ "$3" == "" ]; then
+	ENDIP=254
+else
+	ENDIP=$3
+fi
+
+echo ""
+echo "----------------------------------------------------"
+echo "Preparing to test $SUBNET.$STARTIP to $SUBNET.$ENDIP."
+echo ""
+echo -n "Push Ctrl-C NOW to cancel... "
+sleep 1
+echo -n "3... "
+sleep 1
+echo -n "2... "
+sleep 1
+echo -n "1... "
+sleep 1
+echo "start!"
+echo "----------------------------------------------------"
+
+for i in $(seq $STARTIP $ENDIP); do
+	echo -n "Testing $SUBNET.$i... ";
+	if ping -nq -c 1 -t 1 $SUBNET.$i >/dev/null; then
+		echo -e '\E[0;32mpassed!\E[0m'
+		myarray[${#myarray[*]}]="$SUBNET.$i"
+	else
+		echo -e '\E[0;31mfailed!\E[0m'
+	fi
+done
+
+echo -e "\n----------------------------------\n"
+echo "Testing range from $SUBNET.$STARTIP to $SUBNET.$ENDIP:"
+echo "${#myarray[*]} IPs answered:"
+for j in ${myarray[@]}; do
+	echo "	$j";
+done

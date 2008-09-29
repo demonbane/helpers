@@ -1,0 +1,5 @@
+#!/bin/bash
+for i in IMG*.JPG; do
+	NEWNAME=`exif -mt DateTimeOriginal --ifd EXIF $i | tr ':' ' ' | awk '{print $1$2$3$4$5$6}'`.JPG
+	mv -vi $i $NEWNAME
+done
