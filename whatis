@@ -1,0 +1,18 @@
+#!/bin/bash
+if [ -z "$1" ]; then
+	echo "Must supply server name to show. Aborting."
+	exit 1
+fi
+server="$1"
+# ns0 = positron.planetargon.com = 198.145.115.2
+# ns1 = proton.planetargon.com = 198.145.115.3
+# ns2 = ion.planetargon.com = 198.145.115.4
+# ns3 = xenon.planetargon.com = 64.34.199.71
+# ns4 = krypton.planetargon.com = 66.135.41.75
+# ns5 = electron.planetargon.com = 198.145.115.5
+
+if [ ! -z ${server} ] && grep -q ${server} $0; then
+	grep ${server} $0 | cut -f2- -d" "
+else
+	echo "\"$1\" not found"
+fi
