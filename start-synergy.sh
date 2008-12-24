@@ -40,8 +40,11 @@ if [ "$REMOTE" ]; then
 #	ssh `if [ -z "$DETACH" ]; then echo '-t'; fi` synergy "screen $DETACH /Applications/QuickSynergy.app/Contents/Resources/synergyc -f -d $LEVEL Shrike.argon.lan"
 	ssh synergy 'dscacheutil -flushcache'
 else
+	if ps -Af |grep -q [s]ynergy; then
+		echo "Synergy already running, not starting again."
+		exit 0
 #	screen $DETACH /Applications/QuickSynergy.app/Contents/Resources/synergys -f -d $LEVEL
-	if [ "$DETACH" ]; then
+	elif [ "$DETACH" ]; then
 		synergys -f -d $LEVEL &
 	else
 		synergys -f -d $LEVEL
