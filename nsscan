@@ -39,7 +39,7 @@ if [ -z "$query" ]; then
 	exit 1
 fi
 
-for i in `seq 0 5`; do
+for i in 0 1 2 3 5; do
 	ns=ns$i.planetargon.com
 	cmdline="dig @$ns $options $query +short"
 	if [ $debug ]; then
