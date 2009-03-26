@@ -1,5 +1,10 @@
 #!/bin/bash
 
+# dusize - Ordered listing of disk usage
+# (c) 2006-2009 Alex Malinovich (alex@malinovich.name)
+# Released under the GPL v2 or later
+# See www.fsf.org for a full copy of the GPL.
+
 if ! DUCMD=`which gdu`; then
 	DUCMD=`which du` || exit 1
 fi
