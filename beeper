@@ -1,0 +1,9 @@
+#!/bin/bash
+# Imitation of old C64 racing game beeps
+if which beep &>/dev/null; then
+	beep -l 100 -f 400 -D 1000 -r3
+	beep -l 500 -f 800
+else
+	echo "Unable to find the _beep_ command, aborting."
+	exit 1
+fi
