@@ -1,0 +1,15 @@
+#!/bin/bash
+if [ -z "$1" ]; then
+	exit 1
+fi
+if echo "$1" | grep -q '^ssh://'; then
+	FLEXHOST=`echo "$1" | sed -E 's/^ssh\:\/\/[a-zA-Z0-9]+\@/root\@/'`
+elif echo "$1" | egrep -q '^http://[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}'; then
+	FLEXHOST=`echo "$1" | sed 's/^http\:\/\//root\@/' | sed 's/\/$//'`
+fi
+if [ "$1" == "$FLEXHOST" ]; then
+	echo "Name mangling failed. Aborting."
+	exit 1
+else
+	eyssh "$FLEXHOST" 
+fi
