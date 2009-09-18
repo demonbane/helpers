@@ -1,15 +1,28 @@
 #!/bin/bash
 if [ -z "$1" ]; then
 	exit 1
+elif [ "$1" == "-c" ]; then
+	if [ -z "$2" ] || [ -z "$3" ]; then
+		exit 1
+	fi
+	FLEXFILE="$2"
+	FLEXFULL="$3"
+	SSH_COMMAND="eyscp $FLEXFILE"
+else
+	FLEXFULL="$1"
+	SSH_COMMAND="eyssh"
 fi
-if echo "$1" | grep -q '^ssh://'; then
-	FLEXHOST=`echo "$1" | sed -E 's/^ssh\:\/\/[a-zA-Z0-9_-]+\@/root\@/'`
-elif echo "$1" | egrep -q '^http://[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}'; then
-	FLEXHOST=`echo "$1" | sed 's/^http\:\/\//root\@/' | sed 's/\/$//'`
+
+if echo "$FLEXFULL" | grep -q '^ssh://'; then
+	FLEXHOST=`echo "$FLEXFULL" | sed -E 's/^ssh\:\/\/[a-zA-Z0-9_-]+\@/root\@/'`
+elif echo "$FLEXFULL" | egrep -q '^http://[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}'; then
+	FLEXHOST=`echo "$FLEXFULL" | sed 's/^http\:\/\//root\@/' | sed 's/\/$//'`
 fi
-if [ "$1" == "$FLEXHOST" ]; then
+
+if [ "$FLEXFULL" == "$FLEXHOST" ]; then
 	echo "Name mangling failed. Aborting."
 	exit 1
 else
-	eyssh "$FLEXHOST" 
+	ssh-keygen -R "${FLEXHOST#root@}" -f ~/.ssh/ey.known_hosts
+	$SSH_COMMAND "$FLEXHOST" 
 fi
