@@ -23,6 +23,8 @@ if [ "$FLEXFULL" == "$FLEXHOST" ]; then
 	echo "Name mangling failed. Aborting."
 	exit 1
 else
-	ssh-keygen -R "${FLEXHOST#root@}" -f ~/.ssh/ey.known_hosts
+	if grep -q "${FLEXHOST#root@}" ~/.ssh/ey.known_hosts; then
+		ssh-keygen -R "${FLEXHOST#root@}" -f ~/.ssh/ey.known_hosts
+	fi
 	$SSH_COMMAND "$FLEXHOST" 
 fi
