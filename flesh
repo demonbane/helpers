@@ -19,7 +19,8 @@ elif echo "$FLEXFULL" | egrep -q '^http://[a-zA-Z0-9_-]+'; then
 	FLEXHOST=`echo "$FLEXFULL" | sed 's/^http\:\/\//root\@/' | sed 's/\/$//'`
 fi
 
-if [ "$FLEXFULL" == "$FLEXHOST" ]; then
+if [ "$FLEXFULL" == "$FLEXHOST" ] || [ -z "$FLEXHOST" ]; then
+	echo -e "FLEXFULL=\"$FLEXFULL\"\nFLEXHOST=\"$FLEXHOST\"" >&2
 	echo "Name mangling failed. Aborting."
 	exit 1
 else
