@@ -1,4 +1,0 @@
-#!/bin/bash
-for i in `seq 0 3`; do
-	ssh root@host$i 'for i in `xmb listr | tail -n+5 | grep -v ^$ | awk "{print \\$2}"`; do if [ -f /etc/xen/$i.cfg ]; then grep ip= /etc/xen/$i.cfg | egrep -m 1 -o "198\.145\.115\.[0-9]{1,3}" | head -n1 | tr "\n" "\t"; echo "($i)"; fi; done'
-done
