@@ -1,0 +1,39 @@
+#!/bin/bash
+if [ -z "$1" ]; then
+	echo 'Must specify operation to run. Aborting.'
+	exit 1
+fi
+case "$1" in
+  iowait)
+	if [ ! -z "$2" ]; then
+		DDNUM="$2"
+	else
+		DDNUM=20
+	fi
+	echo "Starting $DDNUM processes:"
+	for i in `seq 1 $DDNUM`; do
+		THISPID=`dd if=/dev/sda1 of=/dev/null seek=$((RANDOM * 100)) & echo $!`
+		DDPID=$DDPID:$THISPID
+		echo "  $i of $DDNUM... [$THISPID]"
+	done
+	echo "done."
+	echo
+	echo "$DDNUM processes started. You can either let them run until you kill"
+	echo "them/they finish, or you may terminate them all now by typing 'DIE'"
+	read -p "Terminate the processes? "
+	if [ "$REPLY" == "DIE" ]; then
+		echo -n "Terminating $DDNUM processes... "
+		echo $DDPID | cut -f2- -d: | tr : ' ' | xargs kill
+		sleep 3
+		echo "done."
+		if pidof /bin/dd > /dev/null; then 
+			echo 'These processes remain: ' `pidof /bin/dd`
+		fi
+	fi
+	exit 0
+	;;
+  *)
+	echo "Sorry, I don't know how to do '$1', aborting"
+	exit 1
+	;;
+esac
