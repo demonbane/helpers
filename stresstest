@@ -33,6 +33,11 @@ case "$1" in
 	fi
 	exit 0
 	;;
+  panic)
+	# This *will* cause a kernel panic if run as root. Consider yourself warned. Halfheartedly.
+	echo 1 > /proc/sys/kernel/panic_on_oops
+	cat /dev/zero > /dev/kmem
+	;;
   *)
 	echo "Sorry, I don't know how to do '$1', aborting"
 	exit 1
