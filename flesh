@@ -9,7 +9,11 @@ elif [ "$1" == "-c" ]; then
 	FLEXFULL="$3"
 	SSH_COMMAND="eyscp $FLEXFILE"
 else
-	FLEXFULL="$1"
+	if [ "${1: -1}" == "/" ]; then
+		FLEXFULL="${1%?}"
+	else
+		FLEXFULL="$1"
+	fi
 	SSH_COMMAND="eyssh"
 fi
 
