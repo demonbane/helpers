@@ -29,7 +29,9 @@ fi
 		size=size/1024
 	}
 
-	if (count==3)
+	if (count==4)
+		suff="TB"
+	else if (count==3)
 		suff="GB"
 	else if (count==2)
 		suff="MB"
