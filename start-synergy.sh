@@ -43,4 +43,4 @@ else
 	synergys -f -d $LEVEL
 fi
 
-ssh synergy 'dscacheutil -flushcache'
+#ssh synergy 'dscacheutil -flushcache'
