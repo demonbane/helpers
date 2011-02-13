@@ -14,7 +14,7 @@ else
 	else
 		FLEXFULL="$1"
 	fi
-	SSH_COMMAND="eyssh"
+	SSH_COMMAND="eyssh -A"
 fi
 
 if echo "$FLEXFULL" | grep -q '^ssh://'; then
