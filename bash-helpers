@@ -1,0 +1,20 @@
+function abort {
+	if [ ! -z "$1" ]; then
+		echo "$1" >&2
+	fi
+	exit 1
+}
+
+function die {
+	abort "$@"
+}
+
+function waitforpid {
+    for pid in "$@"; do
+        while kill -0 "$pid" 2>/dev/null; do
+            sleep 0.5
+        done
+    done
+}
+
+# need to write waitforfile at some point
