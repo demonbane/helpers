@@ -18,3 +18,15 @@ function waitforpid {
 }
 
 # need to write waitforfile at some point
+
+if which cheat &> /dev/null; then
+  function gcheat {
+    if [ "$#" -eq 2 ] && [[ ! $2 = --* ]]; then
+      echo "cheat $1 | egrep $2"
+      cheat "$1" | egrep "$2"
+    else
+      echo "cheat $@"
+      cheat "$@"
+    fi
+  }
+fi
