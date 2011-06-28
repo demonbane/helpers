@@ -30,3 +30,5 @@ if which cheat &> /dev/null; then
     fi
   }
 fi
+
+alias be='bundle exec'
