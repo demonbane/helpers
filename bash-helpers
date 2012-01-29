@@ -33,3 +33,10 @@ fi
 
 alias be='bundle exec'
 alias nocomm="egrep -v '^[[:space:]]*(#|$)'"
+if ls --version 2>/dev/null; then
+  alias ls='ls -alh --color=always'
+else
+  # Probably on a BSD system, most likely a Mac
+  alias ls='ls -lhG'
+fi
+export LESS=-RX
