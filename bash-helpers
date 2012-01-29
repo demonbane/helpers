@@ -32,3 +32,4 @@ if which cheat &> /dev/null; then
 fi
 
 alias be='bundle exec'
+alias nocomm="egrep -v '^[[:space:]]*(#|$)'"
