@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # dusize - Ordered listing of disk usage
-# (c) 2006-2009 Alex Malinovich (alex@malinovich.name)
+# (c) 2006-2012 Alex Malinovich (alex@malinovich.name)
 # Released under the GPL v2 or later
 # See www.fsf.org for a full copy of the GPL.
 
@@ -9,9 +9,19 @@ if ! DUCMD=`which gdu`; then
 	DUCMD=`which du` || exit 1
 fi
 
-if [ -z "$1" ]; then
-	SEARCHDIR="./"
-else
+SORTOPTS="-g"
+SEARCHDIR="./"
+
+x=1 # Avoids an error if we get no options at all.
+while getopts "r" opt; do
+  case "$opt" in
+    r) SORTOPTS="-gr";;
+  esac
+  x=$OPTIND
+done
+shift $(($x-1))
+
+if [ ! -z "$1" ]; then
 	SEARCHDIR="$1"
 fi
 
@@ -20,7 +30,7 @@ if [ ! -d "$SEARCHDIR" ]; then
 	exit 1
 fi
 
-"$DUCMD" -xb --max-depth=1 "$SEARCHDIR" | sort -g | gawk '{
+"$DUCMD" -xb --max-depth=1 "$SEARCHDIR" | sort $SORTOPTS | gawk '{
 	size=$1
 	count=0
 
