@@ -46,3 +46,13 @@ else
 fi
 
 export LESS=-RX
+
+if which brew > /dev/null; then
+  etc_prefix=$(brew --prefix)/etc
+else
+  etc_prefix=/etc
+fi
+
+if [ -f "$etc_prefix/bash_completion" ]; then
+  . "$etc_prefix/bash_completion"
+fi
