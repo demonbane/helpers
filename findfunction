@@ -1,0 +1,4 @@
+#!/bin/bash
+shopt -s extdebug
+declare -F "$1"
+shopt -u extdebug
