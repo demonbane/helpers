@@ -1,4 +1,9 @@
 #!/bin/bash
+if [ "$0" != "-/bin/bash" ]; then
+	echo "Must be run as: source $0 FUNCTION_NAME"
+	exit 1
+fi
+
 shopt -s extdebug
 declare -F "$1"
 shopt -u extdebug
