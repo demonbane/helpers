@@ -53,6 +53,8 @@ else
   etc_prefix=/etc
 fi
 
+if which hub > /dev/null; then eval "$(hub alias -s)"; fi
+
 if [ -f "$etc_prefix/bash_completion" ]; then
   . "$etc_prefix/bash_completion"
 fi
