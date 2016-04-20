@@ -5,23 +5,33 @@
 # Released under the GPL v2 or later
 # See www.fsf.org for a full copy of the GPL.
 
-if ! DUCMD=`which gdu`; then
-	DUCMD=`which du` || exit 1
-fi
+# prefer gnu utils on OSX if available
+DUCMD=`which gdu || which du`
+SORTCMD=`which gsort || which sort`
 
-SORTOPTS="-g"
 SEARCHDIR="./"
+DUOPTS="-xb"
+SORTOPTS="-g"
+FORCE_AWK=false
+DEBUG=false
 
 x=1 # Avoids an error if we get no options at all.
-while getopts "r" opt; do
+while getopts "ard" opt; do
   case "$opt" in
-    r) SORTOPTS="-gr";;
+    a) FORCE_AWK=true;;
+    r) SORTOPTS="${SORTOPTS}r";;
+    d) DEBUG=true;;
   esac
   x=$OPTIND
 done
 shift $(($x-1))
 
-if [ ! -z "$1" ]; then
+if "$SORTCMD" -h < /dev/null 2> /dev/null && ! $FORCE_AWK; then
+	SORTOPTS="${SORTOPTS/#-g/-h}"
+	DUOPTS="${DUOPTS}h"
+fi
+
+if [ ! -z "$1" ] && [ -d "$1" ]; then
 	SEARCHDIR="$1"
 fi
 
@@ -30,7 +40,12 @@ if [ ! -d "$SEARCHDIR" ]; then
 	exit 1
 fi
 
-"$DUCMD" -xb --max-depth=1 "$SEARCHDIR" | sort $SORTOPTS | gawk '{
+if $DEBUG; then
+	echo "$DUCMD $DUOPTS --max-depth=1 $SEARCHDIR | $SORTCMD $SORTOPTS"
+fi
+
+"$DUCMD" $DUOPTS --max-depth=1 "$SEARCHDIR" | "$SORTCMD" $SORTOPTS | if [[ "$SORTOPTS" == *"-h"* ]]; then cat -; else
+	gawk '{
 	size=$1
 	count=0
 
@@ -56,3 +71,4 @@ fi
 		printf("%s ", $i)
 	print ""
 }'
+fi
