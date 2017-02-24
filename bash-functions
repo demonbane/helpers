@@ -31,13 +31,14 @@ function color {
 
 # need to write waitforfile at some point
 
-function gcheat {
-  hash cheat || return 1
-  if [ "$#" -eq 2 ] && [[ ! $2 = --* ]]; then
-    echo "cheat $1 | egrep $2"
-    cheat "$1" | egrep "$2"
-  else
-    echo "cheat $@"
-    cheat "$@"
-  fi
-}
+if hash cheat 2> /dev/null; then
+  function cheat {
+    if [ "$#" -eq 2 ] && [[ ! $2 = --* ]]; then
+      #echo "cheat $1 | egrep $2"
+      command cheat "$1" | egrep "$2"
+    else
+      #echo "cheat $@"
+      command cheat "$@"
+    fi
+  }
+fi
