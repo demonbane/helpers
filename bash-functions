@@ -1,0 +1,43 @@
+function abort {
+	if [ ! -z "$1" ]; then
+		echo $@ >&2
+	fi
+	exit 1
+}
+
+function die {
+	abort "$@"
+}
+
+function waitforpid {
+    for pid in "$@"; do
+        while kill -0 "$pid" 2>/dev/null; do
+            sleep 0.5
+        done
+    done
+}
+
+function color {
+	SEDEXP=sed
+	if which gsed &> /dev/null; then
+		SEDEXP=gsed
+	fi
+	if [ ! -z "$1" ] && [ -f "$1" ]; then
+		color < $1
+	else
+		${SEDEXP} -e 's/^.*$/\x1b[41m\x1b[37m&\x1b[0m/'
+	fi
+}
+
+# need to write waitforfile at some point
+
+function gcheat {
+  hash cheat || return 1
+  if [ "$#" -eq 2 ] && [[ ! $2 = --* ]]; then
+    echo "cheat $1 | egrep $2"
+    cheat "$1" | egrep "$2"
+  else
+    echo "cheat $@"
+    cheat "$@"
+  fi
+}

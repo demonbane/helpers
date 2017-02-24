@@ -1,48 +1,9 @@
-function abort {
-	if [ ! -z "$1" ]; then
-		echo "$1" >&2
-	fi
-	exit 1
-}
-
-function die {
-	abort "$@"
-}
-
-function waitforpid {
-    for pid in "$@"; do
-        while kill -0 "$pid" 2>/dev/null; do
-            sleep 0.5
-        done
-    done
-}
-
-function color {
-	SEDEXP=sed
-	if which gsed &> /dev/null; then
-		SEDEXP=gsed
-	fi
-	if [ ! -z "$1" ] && [ -f "$1" ]; then
-		color < $1
-	else
-		${SEDEXP} -e 's/^.*$/\x1b[41m\x1b[37m&\x1b[0m/'
-	fi
-}
-
-# need to write waitforfile at some point
-
-if which cheat &> /dev/null; then
-  function gcheat {
-    if [ "$#" -eq 2 ] && [[ ! $2 = --* ]]; then
-      echo "cheat $1 | egrep $2"
-      cheat "$1" | egrep "$2"
-    else
-      echo "cheat $@"
-      cheat "$@"
-    fi
-  }
+mypath="$(dirname ${BASH_SOURCE[0]})"
+if [ -f "$mypath/bash-functions" ]; then
+  . "$mypath/bash-functions"
 fi
 
+################## Aliases ###################
 alias be='bundle exec'
 alias nocomm="egrep -v '^[[:space:]]*(#|$)'"
 
@@ -57,17 +18,20 @@ else
   alias ls='ls -lhG'
 fi
 
+
+########### Environment Variables ############
 export LESS=-RX
 
-if which brew > /dev/null; then
+if hash brew 2> /dev/null; then
   etc_prefix=$(brew --prefix)/etc
 else
   etc_prefix=/etc
 fi
 
-if which hub > /dev/null; then eval "$(hub alias -s)"; fi
 
-if which rbenv > /dev/null; then eval "$(rbenv init -)"; fi
+########## Additional Configuration ##########
+hash hub 2> /dev/null && eval "$(hub alias -s)";
+hash rbenv 2> /dev/null && eval "$(rbenv init -)"
 
 if [ -f "$etc_prefix/bash_completion" ]; then
   . "$etc_prefix/bash_completion"
