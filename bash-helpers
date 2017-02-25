@@ -18,6 +18,18 @@ else
   alias ls='ls -lhG'
 fi
 
+if ! hash hd 2> /dev/null; then
+  if hash hexdump 2> /dev/null; then
+    alias hd='hexdump -C'
+  elif od --version &> /dev/null; then
+    # BSD od doesn't do long opts, so assume GNU
+    alias hd='od -A x -t x1z -v'
+  elif hash xxd 2> /dev/null; then
+    # fall back to xxd approximation
+    alias hd='xxd -g 1'
+  fi
+fi
+
 
 ########### Environment Variables ############
 export LESS=-RX
