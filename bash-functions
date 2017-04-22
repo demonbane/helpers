@@ -29,6 +29,40 @@ function color {
 	fi
 }
 
+#enable bash completion for this
+complete -c wcat
+function wcat {
+	if [ "$1" = "-h" ] || [ -z "$1" ]; then
+		echo "Usage: $0 [-l|-v] COMMAND [VIMOPTS]"
+		echo "Print contents of file matching COMMAND"
+		echo
+		echo "  -l  Use less instead of cat"
+		echo '  -v  Use vim instead of cat; append VIMOPTS to vim invocation'
+		echo "  -h  This help"
+		return 0
+	elif [ "$1" = "-l" ]; then
+		cmdname=less
+		shift
+	elif [ "$1" = "-v" ]; then
+		cmdname=vim
+		shift
+	else
+		cmdname=cat
+	fi
+
+	if [ "$(type -t "$1")" != "file" ]; then
+		type "$1"
+		return 1
+	elif ! which "$1" &> /dev/null; then
+		echo "'$1' not found, exiting"
+		return 1
+	else
+		command="$1"
+		shift
+		"$cmdname" "$(which "$command")" $@
+	fi
+}
+
 # need to write waitforfile at some point
 
 if hash cheat 2> /dev/null; then
