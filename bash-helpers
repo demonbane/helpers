@@ -1,3 +1,4 @@
+# vim: syntax=sh
 mypath="$(dirname ${BASH_SOURCE[0]})"
 if [ -f "$mypath/bash-functions" ]; then
   . "$mypath/bash-functions"
