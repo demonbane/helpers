@@ -5,10 +5,15 @@ if [ -f "$mypath/bash-functions" ]; then
 fi
 
 ################## Aliases ###################
-alias be='bundle exec'
 alias nocomm="egrep -v '^[[:space:]]*(#|$)'"
+alias grep='grep --color=auto'
+alias fgrep='fgrep --color=auto'
+alias egrep='egrep --color=auto'
+alias ls='ls -alh'
 
-if ! which ack > /dev/null && which ack-grep > /dev/null; then
+hash bundle 2> /dev/null && alias be='bundle exec'
+
+if ! hash ack 2> /dev/null && hash ack-grep 2> /dev/null; then
   alias ack="`which ack-grep`"
 fi
 
@@ -17,6 +22,12 @@ if ls --version &>/dev/null; then
 else
   # Probably on a BSD system, most likely a Mac
   alias ls='ls -lhG'
+fi
+
+if hash findmnt 2> /dev/null; then
+  alias realmount='findmnt -it sysfs,cgroup,proc,devtmpfs,devpts,pstore,debugfs,hugetlbfs,mqueue,configfs,tmpfs,autofs,fusectl,securityfs,rpc_pipefs,binfmt_misc,tracefs'
+else
+  alias realmount='mount | grep --color=never "^/"'
 fi
 
 if ! hash hd 2> /dev/null; then
@@ -45,6 +56,7 @@ fi
 ########## Additional Configuration ##########
 hash hub 2> /dev/null && eval "$(hub alias -s)";
 hash rbenv 2> /dev/null && eval "$(rbenv init -)"
+hash lesspipe 2> /dev/null && eval "$(SHELL=/bin/sh lesspipe)"
 
 if [ -f "$etc_prefix/bash_completion" ]; then
   . "$etc_prefix/bash_completion"
