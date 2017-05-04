@@ -61,3 +61,7 @@ hash lesspipe 2> /dev/null && eval "$(SHELL=/bin/sh lesspipe)"
 if [ -f "$etc_prefix/bash_completion" ]; then
   . "$etc_prefix/bash_completion"
 fi
+
+if type __git_ps1 &> /dev/null; then
+	PS1='\u@\h:\w$(__git_ps1 " (%s)")\$ '
+fi
