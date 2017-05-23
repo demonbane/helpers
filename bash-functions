@@ -77,3 +77,24 @@ if hash cheat 2> /dev/null; then
     fi
   }
 fi
+
+if hash busctl 2> /dev/null; then
+  function shutdown {
+    if [ "$1" = "--help" ]; then
+      /sbin/shutdown --help
+      echo "  -w             Display time of a pending shutdown (helpers addition)"
+    elif [ "$1" = "-w" ]; then
+      awk -f - <<'ENDAWK' 
+        BEGIN {
+        "busctl get-property org.freedesktop.login1 /org/freedesktop/login1 org.freedesktop.login1.Manager ScheduledShutdown" | getline result
+        split(result,results)
+        results[3]/=1000000
+        if (results[3] != 0)
+                print "Shutdown scheduled for " strftime("%a %Y-%m-%d %T %Z",results[3],0) ", use 'shutdown -c' to cancel."
+}
+ENDAWK
+    else
+      /sbin/shutdown $@
+    fi
+  }
+fi
