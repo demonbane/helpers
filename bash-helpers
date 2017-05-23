@@ -11,7 +11,8 @@ alias fgrep='fgrep --color=auto'
 alias egrep='egrep --color=auto'
 alias ls='ls -alh'
 
-hash bundle 2> /dev/null && alias be='bundle exec'
+hash metaflac 2> /dev/null  &&  alias flacinfo='metaflac --list --except-block-type=PADDING,PICTURE,SEEKTABLE'
+hash bundle 2> /dev/null    &&  alias be='bundle exec'
 
 if ! hash ack 2> /dev/null && hash ack-grep 2> /dev/null; then
   alias ack="`which ack-grep`"
