@@ -30,6 +30,12 @@ function color {
 	fi
 }
 
+function findfunction {
+	shopt -s extdebug
+	declare -F "$1"
+	shopt -u extdebug
+}
+
 #enable bash completion for this
 complete -c wcat
 function wcat {
