@@ -1,5 +1,5 @@
-#!/bin/bash
-if [ "$0" != "-/bin/bash" ]; then
+#!/usr/bin/env bash
+if [ "$0" = "${BASH_SOURCE[0]}" ]; then
 	echo "Must be run as: source $0 FUNCTION_NAME"
 	exit 1
 fi
