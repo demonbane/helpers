@@ -30,6 +30,17 @@ function color {
 	fi
 }
 
+function findfunction {
+	if [ "$(type -t "$1")" != "function" ]; then
+		type "$1"
+		return 0
+	fi
+	shopt -s extdebug
+	declare -F "$1"
+	type "$1"
+	shopt -u extdebug
+}
+
 #enable bash completion for this
 complete -c wcat
 function wcat {
