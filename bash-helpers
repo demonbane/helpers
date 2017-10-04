@@ -1,8 +1,6 @@
 # vim: syntax=sh
 mypath="$(dirname ${BASH_SOURCE[0]})"
-if [ -f "$mypath/bash-functions" ]; then
-  . "$mypath/bash-functions"
-fi
+[ -f "$mypath/bash-functions" ] && source "$mypath/bash-functions"
 
 ################## Aliases ###################
 alias nocomm="egrep -v '^[[:space:]]*(#|$)'"
@@ -59,10 +57,7 @@ hash hub 2> /dev/null && eval "$(hub alias -s)";
 hash rbenv 2> /dev/null && eval "$(rbenv init -)"
 hash lesspipe 2> /dev/null && eval "$(SHELL=/bin/sh lesspipe)"
 
-if [ -f "$etc_prefix/bash_completion" ]; then
-  . "$etc_prefix/bash_completion"
-fi
+[ -f "$etc_prefix/bash_completion" ] && source "$etc_prefix/bash_completion"
 
-if type __git_ps1 &> /dev/null; then
-	PS1='\u@\h:\w$(__git_ps1 " (%s)")\$ '
-fi
+# Enable git branch prompt if available
+type __git_ps1 &> /dev/null && PS1='\u@\h:\w$(__git_ps1 " (%s)")\$ '
