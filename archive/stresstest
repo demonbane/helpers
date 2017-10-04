@@ -27,7 +27,7 @@ case "$1" in
 		echo $DDPID | cut -f2- -d: | tr : ' ' | xargs kill
 		sleep 3
 		echo "done."
-		if pidof /bin/dd > /dev/null; then 
+		if pidof /bin/dd > /dev/null; then
 			echo 'These processes remain: ' `pidof /bin/dd`
 		fi
 	fi

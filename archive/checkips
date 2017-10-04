@@ -1,12 +1,11 @@
 #!/bin/bash
 
 # checkips - Test subnet for responsive IP addresses.
-# (c) 2006-2009 Alex Malinovich (demonbane@the-love-shack.net)
+# (c) 2006-2017 Alex Malinovich (demonbane@the-love-shack.net)
 # Released under the GPL
 # See www.fsf.org for a full copy of the GPL.
 
-if [ "$1" == "" ] || [ "$1" == "-h" ] || [ "$1" == "--help" ] || 
-[ "$1" == "--usage" ]; then
+if [ -z "$1" -o "$1" == "-h" -o "$1" == "--help" -o "$1" == "--usage" ]; then
 	echo "Usage: checkips <SUBNET> [<STARTRANGE>] [<ENDRANGE>]"
 	echo "       SUBNET - Subnet as THREE octets (i.e. xxx.xxx.xxx)"
 	echo "       STARTRANGE - Beginning IP"
