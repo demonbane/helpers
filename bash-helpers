@@ -19,8 +19,15 @@ fi
 if ls --version &>/dev/null; then
   alias ls='ls -alh --color=always'
 else
-  # Probably on a BSD system, most likely a Mac
+  # Probably OSX
   alias ls='ls -lhG'
+fi
+
+if cp --version &>/dev/null; then
+  alias cp='cp --reflink=auto'
+else
+  # Probably OSX
+  alias cp='cp -c'
 fi
 
 if hash findmnt 2> /dev/null; then
