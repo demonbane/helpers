@@ -9,7 +9,6 @@
 DUCMD=`which gdu || which du`
 SORTCMD=`which gsort || which sort`
 
-SEARCHDIR="./"
 DUOPTS="-xb"
 SORTOPTS="-g"
 FORCE_AWK=false
@@ -31,20 +30,22 @@ if "$SORTCMD" -h < /dev/null 2> /dev/null && ! $FORCE_AWK; then
 	DUOPTS="${DUOPTS}h"
 fi
 
-if [ ! -z "$1" ] && [ -d "$1" ]; then
-	SEARCHDIR="$1"
-fi
+for i; do
+	if [ ! -z "$i" ] && [ -d "$i" ]; then
+		SEARCHDIR+=("$i")
+	fi
+	shift
+done
 
-if [ ! -d "$SEARCHDIR" ]; then
-	echo "Invalid directory. Aborting."
-	exit 1
+if [ -z "${SEARCHDIR[*]}" ]; then
+	SEARCHDIR=("./")
 fi
 
 if $DEBUG; then
-	echo "$DUCMD $DUOPTS --max-depth=1 $SEARCHDIR | $SORTCMD $SORTOPTS"
+	echo "$DUCMD $DUOPTS --max-depth=1 ${SEARCHDIR[@]} | $SORTCMD $SORTOPTS"
 fi
 
-"$DUCMD" $DUOPTS --max-depth=1 "$SEARCHDIR" | "$SORTCMD" $SORTOPTS | if [[ "$SORTOPTS" == *"-h"* ]]; then cat -; else
+"$DUCMD" $DUOPTS --max-depth=1 "${SEARCHDIR[@]}" | "$SORTCMD" $SORTOPTS | if [[ "$SORTOPTS" == *"-h"* ]]; then cat -; else
 	gawk '{
 	size=$1
 	count=0
