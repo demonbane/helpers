@@ -39,13 +39,16 @@ done
 
 if [ -z "${SEARCHDIR[*]}" ]; then
 	SEARCHDIR=("./")
+	MAXDEPTH=1
+else
+	MAXDEPTH=0
 fi
 
 if $DEBUG; then
-	echo "$DUCMD $DUOPTS --max-depth=1 ${SEARCHDIR[@]} | $SORTCMD $SORTOPTS"
+	echo "$DUCMD $DUOPTS --max-depth=$MAXDEPTH ${SEARCHDIR[@]} | $SORTCMD $SORTOPTS"
 fi
 
-"$DUCMD" $DUOPTS --max-depth=1 "${SEARCHDIR[@]}" | "$SORTCMD" $SORTOPTS | if [[ "$SORTOPTS" == *"-h"* ]]; then cat -; else
+"$DUCMD" $DUOPTS --max-depth=$MAXDEPTH "${SEARCHDIR[@]}" | "$SORTCMD" $SORTOPTS | if [[ "$SORTOPTS" == *"-h"* ]]; then cat -; else
 	gawk '{
 	size=$1
 	count=0
