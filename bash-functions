@@ -77,17 +77,13 @@ function wcat {
 
 # need to write waitforfile at some point
 
-if hash cheat 2> /dev/null; then
-  function cheat {
-    if [ "$#" -eq 2 ] && [[ ! $2 = --* ]]; then
-      #echo "cheat $1 | egrep $2"
-      command cheat "$1" | egrep "$2"
-    else
-      #echo "cheat $@"
-      command cheat "$@"
-    fi
-  }
-fi
+function cheat {
+  if [ "$#" -eq 2 ] && [[ ! $2 = --* ]]; then
+    command cheat "$1" | egrep --color=auto "$2"
+  else
+    command cheat "$@"
+  fi
+}
 
 if hash busctl 2> /dev/null; then
   function shutdown {
