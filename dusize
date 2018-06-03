@@ -67,7 +67,14 @@ if $DEBUG; then
 fi
 
 du "$DUOPTS" -d ${MAXDEPTH:-1} "${SEARCHDIR[@]}" | sort $SORTOPTS | if [[ "$SORTOPTS" == *"-h"* ]]; then cat -; else
-	gawk '{
+	awk 'BEGIN{
+	suff[0]="KiB"
+	suff[1]="MiB"
+	suff[2]="GiB"
+	suff[3]="TiB"
+	suff[4]="PiB"
+	}
+	{
 	size=$1
 	count=0
 
@@ -76,18 +83,7 @@ du "$DUOPTS" -d ${MAXDEPTH:-1} "${SEARCHDIR[@]}" | sort $SORTOPTS | if [[ "$SORT
 		size=size/1024
 	}
 
-	if (count==4)
-		suff="TB"
-	else if (count==3)
-		suff="GB"
-	else if (count==2)
-		suff="MB"
-	else if (count==1)
-		suff="KB"
-	else
-		suff="B"
-
-	printf("%6.1f %s\t", size, suff)
+	printf("%6.1f %s\t", size, suff[count])
 
 	for (i=2; i <= NF; i++)
 		printf("%s ", $i)
