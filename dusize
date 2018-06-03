@@ -11,13 +11,19 @@ FORCE_AWK=false
 DEBUG=false
 
 x=1 # Avoids an error if we get no options at all.
-while getopts "ard" opt; do
-  case "$opt" in
-    a) FORCE_AWK=true;;
-    r) SORTOPTS="${SORTOPTS}r";;
-    d) DEBUG=true;;
-  esac
-  x=$OPTIND
+while getopts "artdh" opt; do
+	case "$opt" in
+		a) FORCE_AWK=true;;
+		r) SORTOPTS="${SORTOPTS}r";;
+		t) MAXDEPTH=0;;
+		d) DEBUG=true;;
+		h|\?) printf 'Usage: %s [-a] [-r] [-t] [-d] PATHS...
+	-a	Force awk to be used even if sort supports -h
+	-r	Reverse sort
+	-t	Display total usage only
+	-d	Debug mode (print command to be run)\n' "$(basename "$0")"; exit 0;;
+	esac
+	x=$OPTIND
 done
 shift $(($x-1))
 
@@ -39,7 +45,7 @@ fi
 # `for` without `in` defaults to iterating through $@
 for i; do
 	if [ ! -z "$i" ] && [ -d "$i" ]; then
-		SEARCHDIR+=("$i")
+		SEARCHDIR+=("${i%%/}")
 	fi
 	shift
 done
