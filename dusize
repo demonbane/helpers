@@ -1,15 +1,11 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # dusize - Ordered listing of disk usage
-# (c) 2006-2012 Alex Malinovich (alex@malinovich.name)
+# (c) 2006-2018 Alex Malinovich (alex@malinovich.name)
 # Released under the GPL v2 or later
 # See www.fsf.org for a full copy of the GPL.
 
-# prefer gnu utils on OSX if available
-DUCMD=`which gdu || which du`
-SORTCMD=`which gsort || which sort`
-
-DUOPTS="-xb"
+DUOPTS="-xk"
 SORTOPTS="-g"
 FORCE_AWK=false
 DEBUG=false
@@ -25,11 +21,22 @@ while getopts "ard" opt; do
 done
 shift $(($x-1))
 
-if "$SORTCMD" -h < /dev/null 2> /dev/null && ! $FORCE_AWK; then
-	SORTOPTS="${SORTOPTS/#-g/-h}"
-	DUOPTS="${DUOPTS}h"
+[ -n "$SORTCMD" -a -x "$SORTCMD" ] && hash -p "$SORTCMD" sort 2>/dev/null
+[ -n "$DUCMD" -a -x "$DUCMD" ] && hash -p "$DUCMD" du 2>/dev/null
+[ -n "$AWKCMD" -a -x "$AWKCMD" ] && hash -p "$AWKCMD" awk 2>/dev/null && FORCE_AWK=true
+
+if ! sort -h < /dev/null 2>/dev/null && hash gsort 2>/dev/null; then
+	hash -p "$(hash -t gsort)" sort
 fi
 
+if ! $FORCE_AWK && sort -h < /dev/null 2>/dev/null; then
+	SORTOPTS="${SORTOPTS/#-g/-h}"
+	DUOPTS="${DUOPTS}h"
+else
+	FORCE_AWK=true
+fi
+
+# `for` without `in` defaults to iterating through $@
 for i; do
 	if [ ! -z "$i" ] && [ -d "$i" ]; then
 		SEARCHDIR+=("$i")
@@ -38,17 +45,22 @@ for i; do
 done
 
 if [ -z "${SEARCHDIR[*]}" ]; then
-	SEARCHDIR=("./")
-	MAXDEPTH=1
-else
-	MAXDEPTH=0
+	SEARCHDIR=(".")
 fi
 
 if $DEBUG; then
-	echo "$DUCMD $DUOPTS --max-depth=$MAXDEPTH ${SEARCHDIR[@]} | $SORTCMD $SORTOPTS"
+	hash -t du &>/dev/null || hash du 2>/dev/null
+	hash -t sort &>/dev/null || hash sort 2>/dev/null
+	printf '%s %s -d %i %s | %s %s' "$(hash -t du)" "$DUOPTS" ${MAXDEPTH:-1} "${SEARCHDIR[@]}" "$(hash -t sort)" "$SORTOPTS"
+	if $FORCE_AWK; then
+		hash -t awk &>/dev/null || hash awk 2>/dev/null
+		printf ' | %s\n' "$(hash -t awk)"
+	else
+		printf '\n'
+	fi
 fi
 
-"$DUCMD" $DUOPTS --max-depth=$MAXDEPTH "${SEARCHDIR[@]}" | "$SORTCMD" $SORTOPTS | if [[ "$SORTOPTS" == *"-h"* ]]; then cat -; else
+du "$DUOPTS" -d ${MAXDEPTH:-1} "${SEARCHDIR[@]}" | sort $SORTOPTS | if [[ "$SORTOPTS" == *"-h"* ]]; then cat -; else
 	gawk '{
 	size=$1
 	count=0
