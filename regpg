@@ -12,8 +12,8 @@ while getopts "hpr:s" opt; do
 		p) preserve=true;;
 		r) recipient="${OPTARG}";;
 		s) sign='--sign';;
-		h|\?) printf 'Usage: %s [-p] [-r RECIPIENT] [-s] FILES...
-	-p	Preserve the timestamp of the original
+		h|\?) printf 'Usage: %s [-p] [-r RECIPIENT] [-s] FILE...
+	-p	Preserve permissions, owners, and timestamp of files
 	-r	New recipient (default is existing recipient)
 	-s	Sign and encrypt (default is encrypt only)\n' "$(basename "$0")"; exit 0;;
 	esac
