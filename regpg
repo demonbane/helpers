@@ -1,0 +1,57 @@
+#!/usr/bin/env bash
+
+[ $# -eq 0 ] && set -- -h
+
+# For future reference:
+# $ help getops
+# note the "opt" in getopts call, and "$opt" in case block
+# the x=1 bit is to allow us to strip out all processed options to keep $@ "clean"
+x=1
+while getopts "hpr:s" opt; do
+	case "$opt" in
+		p) preserve=true;;
+		r) recipient="${OPTARG}";;
+		s) sign='--sign';;
+		h|\?) printf 'Usage: %s [-p] [-r RECIPIENT] [-s] FILES...
+	-p	Preserve the timestamp of the original
+	-r	New recipient (default is existing recipient)
+	-s	Sign and encrypt (default is encrypt only)\n' "$(basename "$0")"; exit 0;;
+	esac
+	x=$OPTIND
+done
+shift $(($x-1))
+
+for i in chmod chown; do
+	if ! $i --version &>/dev/null; then
+		if hash g${i} 2>/dev/null; then
+			hash -p "$(hash -t g${i})" ${i}
+		fi
+	fi
+done
+
+# `for` without `in` defaults to iterating through $@
+for i; do
+	if [ ! -e "$i" ]; then
+		printf '%b: file not found, skipping\n' "$i" >&2
+		continue
+	fi
+
+	if [ "$recipient" ]; then
+		temprecipient="$recipient"
+	else
+		temprecipient="$(gpg --batch --list-packets "$i" 2> /dev/null | awk '/^:pubkey.*keyid / { print $9 }')"
+	fi
+
+	tempfile=$(mktemp)
+	
+	printf 'Re-encrypting "%b" with gpg --recipient "%b" %b... ' "$i" "$temprecipient" $sign
+	gpg --batch --decrypt "$i" 2>/dev/null | gpg --batch --yes --encrypt --local-user "$temprecipient" --recipient "$temprecipient" $sign --output "$tempfile" 2>/dev/null && printf 'done\n'
+
+	if [ $preserve ]; then
+		chmod --reference="$i" "$tempfile"
+		chown --reference="$i" "$tempfile"
+		touch -r "$i" "$tempfile"
+	fi
+
+	mv -f "$tempfile" "$i"
+done
