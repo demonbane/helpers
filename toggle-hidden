@@ -1,0 +1,12 @@
+#!/bin/bash
+shopt -s nocasematch
+currentbool="$(defaults read com.apple.finder AppleShowAllFiles)"
+if [ "$currentbool" == "TRUE" ]; then
+	bool=FALSE
+elif [ "$currentbool" == "FALSE" ]; then
+	bool=TRUE
+else
+	printf "ERROR: Unable to determine current status. Exiting.\n" >&2
+	exit 1
+fi
+defaults write com.apple.finder AppleShowAllFiles $bool && killall Finder

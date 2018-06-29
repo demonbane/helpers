@@ -43,7 +43,7 @@ for i; do
 	fi
 
 	tempfile=$(mktemp)
-	
+
 	printf 'Re-encrypting "%b" with gpg --recipient "%b" %b... ' "$i" "$temprecipient" $sign
 	gpg --batch --decrypt "$i" 2>/dev/null | gpg --batch --yes --encrypt --local-user "$temprecipient" --recipient "$temprecipient" $sign --output "$tempfile" 2>/dev/null && printf 'done\n'
 

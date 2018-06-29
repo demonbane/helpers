@@ -1,7 +1,0 @@
-#!/bin/bash
-if [ -z "$1" ] || [ "$1" == "-e" ]; then
-  bool=TRUE
-else
-  bool=FALSE
-fi
-defaults write com.apple.finder AppleShowAllFiles $bool && killall Finder
