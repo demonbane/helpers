@@ -1,6 +1,6 @@
 #!/bin/bash
 shopt -s nocasematch
-currentbool="$(defaults read com.apple.finder AppleShowAllFiles)"
+currentbool="$(defaults read com.apple.finder AppleShowAllFiles 2> /dev/null || echo FALSE)"
 if [ "$currentbool" == "TRUE" ]; then
 	bool=FALSE
 elif [ "$currentbool" == "FALSE" ]; then
