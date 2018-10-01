@@ -44,8 +44,8 @@ function findfunction {
 #enable bash completion for this
 complete -c wcat
 function wcat {
-	if [ "$1" = "-h" ] || [ -z "$1" ]; then
-		echo "Usage: $0 [-l|-v] COMMAND [VIMOPTS]"
+	if [ "$1" = "-h" ] || [ "$1" = "--help" ] || [ -z "$1" ]; then
+		echo "Usage: $FUNCNAME [-l|-v] COMMAND [VIMOPTS]"
 		echo "Print contents of file matching COMMAND"
 		echo
 		echo "  -l  Use less instead of cat"
