@@ -50,7 +50,6 @@ fi
 
 
 ########### Environment Variables ############
-export LESS=-RX
 
 if hash brew 2> /dev/null; then
   etc_prefix=$(brew --prefix)/etc
