@@ -31,7 +31,7 @@ else
 fi
 
 if hash findmnt 2> /dev/null; then
-  alias realmount='findmnt -it sysfs,cgroup,cgroup2,proc,devtmpfs,devpts,pstore,debugfs,hugetlbfs,mqueue,configfs,tmpfs,autofs,fusectl,securityfs,rpc_pipefs,binfmt_misc,tracefs'
+  alias realmount='findmnt -it sysfs,cgroup,cgroup2,proc,devtmpfs,devpts,pstore,debugfs,hugetlbfs,mqueue,configfs,tmpfs,autofs,fusectl,securityfs,rpc_pipefs,binfmt_misc,tracefs,squashfs'
 else
   alias realmount='mount | grep --color=never "^/"'
 fi
