@@ -1,4 +1,4 @@
-# vim: syntax=sh
+# vim: syntax=sh tabstop=4 shiftwidth=4
 function abort {
 	if [ ! -z "$1" ]; then
 		echo $@ >&2
@@ -11,11 +11,11 @@ function die {
 }
 
 function waitforpid {
-    for pid in "$@"; do
-        while kill -0 "$pid" 2>/dev/null; do
-            sleep 0.5
-        done
-    done
+	for pid in "$@"; do
+		while kill -0 "$pid" 2>/dev/null; do
+			sleep 0.5
+		done
+	done
 }
 
 function color {
@@ -78,30 +78,30 @@ function wcat {
 # need to write waitforfile at some point
 
 function cheat {
-  if [ "$#" -eq 2 ] && [[ ! $2 = --* ]]; then
-    command cheat "$1" | egrep --color=auto "$2"
-  else
-    command cheat "$@"
-  fi
+	if [ "$#" -eq 2 ] && [[ ! $2 = --* ]]; then
+		command cheat "$1" | egrep --color=auto "$2"
+	else
+		command cheat "$@"
+	fi
 }
 
 if hash busctl 2> /dev/null; then
-  function shutdown {
-    if [ "$1" = "--help" ]; then
-      /sbin/shutdown --help
-      echo "  -w             Display time of a pending shutdown (helpers addition)"
-    elif [ "$1" = "-w" ]; then
-      awk -f - <<'ENDAWK'
-        BEGIN {
-        "busctl get-property org.freedesktop.login1 /org/freedesktop/login1 org.freedesktop.login1.Manager ScheduledShutdown" | getline result
-        split(result,results)
-        results[3]/=1000000
-        if (results[3] != 0)
-                print "Shutdown scheduled for " strftime("%a %Y-%m-%d %T %Z",results[3],0) ", use 'shutdown -c' to cancel."
-}
+	function shutdown {
+		if [ "$1" = "--help" ]; then
+			/sbin/shutdown --help
+			echo "  -w             Display time of a pending shutdown (helpers addition)"
+		elif [ "$1" = "-w" ]; then
+			awk -f - <<'ENDAWK'
+			BEGIN {
+				"busctl get-property org.freedesktop.login1 /org/freedesktop/login1 org.freedesktop.login1.Manager ScheduledShutdown" | getline result
+				split(result,results)
+				results[3]/=1000000
+				if (results[3] != 0)
+				print "Shutdown scheduled for " strftime("%a %Y-%m-%d %T %Z",results[3],0) ", use 'shutdown -c' to cancel."
+			}
 ENDAWK
-    else
-      /sbin/shutdown $@
-    fi
-  }
+		else
+			/sbin/shutdown $@
+		fi
+	}
 fi
