@@ -105,3 +105,28 @@ ENDAWK
 		fi
 	}
 fi
+
+if hash mkvinfo 2> /dev/null; then
+	function mkvinf () {
+	    local args=( "$@" )
+	    if [ "$1" = "-h" -o "$1" = "--help" ]; then
+	        printf 'Usage: mkvinf MKVFILE... [ELEMENT]\n'
+	        printf 'Print information about ELEMENT in MKVFILES, or all elements if ELEMENT is not provided.'
+	        printf '\n\nCommon elements:\n\taudio\n\tresolution\n\tsubtitles\n\tvideo\n'
+	        return 1
+	    fi
+	    if [ -n "$2" ] && [ ! -f "${args[-1]}" ]; then
+	        local fieldname="${args[-1]}"
+	        unset 'args[-1]'
+	    fi
+	    for i in "${args[@]}"; do
+	        if [ -n "$fieldname" ] && [ "$fieldname" != "resolution" ]; then
+	            mkvmerge --identify -F json "$1" | jq -C '.tracks | .[] | select(.type=="'"$fieldname"'")'
+	        elif [ "$fieldname" = "resolution" ]; then
+	            mkvmerge --identify -F json "$1" | jq -C '.tracks | .[] | select(.type=="video") | .properties | .display_dimensions'
+	        else
+	            mkvmerge --identify -F json "$1" | jq -C '.'
+	        fi
+	    done
+	}
+fi
