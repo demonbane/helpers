@@ -1,4 +1,4 @@
-# vim: syntax=sh
+# vim: syntax=sh tabstop=2 shiftwidth=2
 mypath="$(dirname ${BASH_SOURCE[0]})"
 [ -f "$mypath/bash-functions" ] && source "$mypath/bash-functions"
 
@@ -48,22 +48,23 @@ if ! hash hd 2> /dev/null; then
   fi
 fi
 
+############## Enable Homebrew ###############
+hash brew 2> /dev/null ||
+{ [ -x /home/linuxbrew/.linuxbrew/bin/brew ] && hash -p /home/linuxbrew/.linuxbrew/bin/brew brew; } ||
+{ [ -x /opt/homebrew/bin/brew ] && hash -p /opt/homebrew/bin/brew brew; }
 
-########### Environment Variables ############
-
-if hash brew 2> /dev/null; then
-  etc_prefix=$(brew --prefix)/etc
-else
-  etc_prefix=/etc
-fi
-
+hash -t brew &> /dev/null && eval $(brew shellenv) && etc_prefix=$(brew --prefix)
 
 ########## Additional Configuration ##########
 hash hub 2> /dev/null && eval "$(hub alias -s)";
 hash rbenv 2> /dev/null && eval "$(rbenv init -)"
 hash lesspipe 2> /dev/null && eval "$(SHELL=/bin/sh lesspipe)"
 
-[ -f "$etc_prefix/bash_completion" ] && source "$etc_prefix/bash_completion"
+if [ -f "$etc_prefix/etc/bash_completion" ]; then
+  source "$etc_prefix/etc/bash_completion"
+elif [ -f /etc/bash_completion ]; then
+  source /etc/bash_completion
+fi
 
 # Enable git branch prompt if available
 type __git_ps1 &> /dev/null && PS1='\u@\h:\w$(__git_ps1 " (%s)")\$ '
