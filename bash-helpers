@@ -60,11 +60,9 @@ hash hub 2> /dev/null && eval "$(hub alias -s)";
 hash rbenv 2> /dev/null && eval "$(rbenv init -)"
 hash lesspipe 2> /dev/null && eval "$(SHELL=/bin/sh lesspipe)"
 
-if [ -f "$etc_prefix/etc/bash_completion" ]; then
-  source "$etc_prefix/etc/bash_completion"
-elif [ -f /etc/bash_completion ]; then
-  source /etc/bash_completion
+if [ -r "$etc_prefix/etc/profile.d/bash_completion.sh" ]; then
+	source "$etc_prefix/etc/profile.d/bash_completion.sh"
 fi
 
 # Enable git branch prompt if available
-type __git_ps1 &> /dev/null && PS1='\u@\h:\w$(__git_ps1 " (%s)")\$ '
+type __git_ps1 &> /dev/null && PS1=${PS1/?( )\\\$/\$(__git_ps1 \" (%s)\")\\\$}
