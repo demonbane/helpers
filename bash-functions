@@ -30,6 +30,20 @@ function color {
 	fi
 }
 
+function failcolor {
+	if [ "$1" = '-h' -o "$1" = '--help' ]; then
+		echo "Usage: ${FUNCNAME[0]} STRING"
+		echo "Print STDIN using \`color' if output does not match STRING"
+		return 1
+	fi
+	inputstring=$(cat)
+	if [ "$inputstring" != "$1" ]; then
+		color <<< "$inputstring"
+	else
+		printf '%q' "$inputstring"
+	fi
+}
+
 function findfunction {
 	if [ "$(type -t "$1")" != "function" ]; then
 		type "$1"
