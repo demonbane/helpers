@@ -36,6 +36,10 @@ else
   alias realmount='mount | grep --color=never "^/"'
 fi
 
+if hash gpg-connect-agent 2> /dev/null; then
+	alias gpg-update-yubikey='gpg-connect-agent "scd serialno" "learn --force" /bye'
+fi
+
 if ! hash hd 2> /dev/null; then
   if hash hexdump 2> /dev/null; then
     alias hd='hexdump -C'
