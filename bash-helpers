@@ -7,20 +7,13 @@ alias nocomm="egrep -v '^[[:space:]]*(#|$)'"
 alias grep='grep --color=auto'
 alias fgrep='fgrep --color=auto'
 alias egrep='egrep --color=auto'
-alias ls='ls -alh'
+alias ls='ls -alh --color=always'
 
 hash metaflac 2> /dev/null  &&  alias flacinfo='metaflac --list --except-block-type=PADDING,PICTURE,SEEKTABLE'
 hash bundle 2> /dev/null    &&  alias be='bundle exec'
 
 if ! hash ack 2> /dev/null && hash ack-grep 2> /dev/null; then
   alias ack="`which ack-grep`"
-fi
-
-if ls --version &>/dev/null; then
-  alias ls='ls -alh --color=always'
-else
-  # Probably OSX
-  alias ls='ls -lhG'
 fi
 
 if cp --version &>/dev/null; then
