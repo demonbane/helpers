@@ -19,14 +19,10 @@ function waitforpid {
 }
 
 function color {
-	SEDEXP=sed
-	if which gsed &> /dev/null; then
-		SEDEXP=gsed
-	fi
 	if [ ! -z "$1" ] && [ -f "$1" ]; then
 		color < $1
 	else
-		${SEDEXP} -e 's/^.*$/\x1b[41m\x1b[37m&\x1b[0m/'
+		printf '\x1b[41m\x1b[37m%q\x1b[0m' $(cat)
 	fi
 }
 
