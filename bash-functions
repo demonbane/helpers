@@ -51,6 +51,181 @@ function findfunction {
 	shopt -u extdebug
 }
 
+function codex_update {
+	local parsed_args codex_path codex_dir brew_prefix npm_prefix file_output
+	local detected_method requested_method method version dry_run installed action
+
+	parsed_args="$(getopt -o hm:n --long help,method:,dry-run -- "$@")" || return 2
+	eval set -- "$parsed_args"
+
+	requested_method=""
+	dry_run=0
+	while true; do
+		case "$1" in
+			-h|--help)
+				echo "Usage: ${FUNCNAME[0]} [--dry-run] [--method brew|npm|install.sh] [VERSION]"
+				echo "Update Codex if installed, or install it if missing."
+				echo
+				echo "If Codex is already installed, the existing install method is preserved unless --method is given."
+				echo "If Codex is missing, the default install order is brew, then npm, then install.sh."
+				return 0
+				;;
+			-m|--method)
+				requested_method="$2"
+				shift 2
+				;;
+			-n|--dry-run)
+				dry_run=1
+				shift
+				;;
+			--)
+				shift
+				break
+				;;
+			*)
+				echo "Unexpected option parsing state: $1" >&2
+				return 2
+				;;
+		esac
+	done
+
+	version="${1:-latest}"
+	if [ $# -gt 1 ]; then
+		echo "Too many arguments." >&2
+		return 2
+	fi
+
+	case "$requested_method" in
+		""|brew|npm|install.sh)
+			;;
+		*)
+			echo "Unsupported method: $requested_method" >&2
+			echo "Expected one of: brew, npm, install.sh" >&2
+			return 2
+			;;
+	esac
+
+	codex_path="$(command -v codex 2>/dev/null || true)"
+	if [ -n "$codex_path" ]; then
+		installed=1
+		codex_dir="$(cd "$(dirname "$codex_path")" 2>/dev/null && pwd -P)"
+	else
+		installed=0
+		codex_dir=""
+	fi
+
+	detected_method="unknown"
+
+	if hash brew 2> /dev/null; then
+		brew_prefix="$(brew --prefix 2>/dev/null || true)"
+		if brew list --cask codex >/dev/null 2>&1; then
+			if [ -z "$codex_path" ] || [[ "$codex_path" == "$brew_prefix/"* ]]; then
+				detected_method="brew"
+			fi
+		elif brew list --formula codex >/dev/null 2>&1 || brew list codex >/dev/null 2>&1; then
+			if [ -z "$codex_path" ] || [[ "$codex_path" == "$brew_prefix/"* ]]; then
+				detected_method="brew"
+			fi
+		fi
+	fi
+
+	if [ "$detected_method" = "unknown" ] && hash npm 2> /dev/null; then
+		npm_prefix="$(npm prefix -g 2>/dev/null || true)"
+		if [ -n "$npm_prefix" ] && [ -f "$npm_prefix/lib/node_modules/@openai/codex/package.json" ]; then
+			if [ -z "$codex_path" ] || [ "$codex_dir" = "$npm_prefix/bin" ]; then
+				detected_method="npm"
+			fi
+		fi
+	fi
+
+	if [ "$detected_method" = "unknown" ] && [ -n "$codex_path" ] && [ -f "$codex_path" ]; then
+		file_output="$(file "$codex_path" 2>/dev/null || true)"
+		if [[ "$file_output" == *ELF* || "$file_output" == *Mach-O* ]]; then
+			if [ -x "$codex_dir/rg" ] || [ "$codex_dir" = "$HOME/.local/bin" ]; then
+				detected_method="install.sh"
+			fi
+		fi
+	fi
+
+	if [ "$installed" -eq 1 ]; then
+		if [ "$detected_method" = "unknown" ]; then
+			echo "Codex is installed, but the install method could not be determined." >&2
+			echo "Checked for Homebrew, npm, and the official install.sh binary install." >&2
+			return 1
+		fi
+		if [ -n "$requested_method" ] && [ "$requested_method" != "$detected_method" ]; then
+			method="$requested_method"
+			action="install"
+		else
+			method="$detected_method"
+			action="update"
+		fi
+	else
+		action="install"
+		if [ -n "$requested_method" ]; then
+			method="$requested_method"
+		elif hash brew 2> /dev/null; then
+			method="brew"
+		elif hash npm 2> /dev/null; then
+			method="npm"
+		else
+			method="install.sh"
+		fi
+	fi
+
+	case "$method" in
+		brew)
+			if ! hash brew 2> /dev/null; then
+				echo "Homebrew is not available." >&2
+				return 1
+			fi
+			if [ "$action" = "install" ]; then
+				echo "Installing Codex via Homebrew cask"
+				if [ "$installed" -eq 1 ] && [ -n "$requested_method" ] && [ "$requested_method" != "$detected_method" ]; then
+					echo "Existing Codex install detected via $detected_method; switching to Homebrew will not remove the old install."
+				fi
+				[ "$dry_run" -eq 1 ] || brew install --cask codex
+			else
+				echo "Updating Codex via Homebrew"
+				[ "$dry_run" -eq 1 ] || brew upgrade --cask codex
+			fi
+			;;
+		npm)
+			if ! hash npm 2> /dev/null; then
+				echo "npm is not available." >&2
+				return 1
+			fi
+			if [ "$action" = "install" ]; then
+				echo "Installing Codex via npm"
+				if [ "$installed" -eq 1 ] && [ -n "$requested_method" ] && [ "$requested_method" != "$detected_method" ]; then
+					echo "Existing Codex install detected via $detected_method; switching to npm will not remove the old install."
+				fi
+			else
+				echo "Updating Codex via npm"
+			fi
+			[ "$dry_run" -eq 1 ] || npm install -g "@openai/codex@$version"
+			;;
+		install.sh)
+			if ! hash curl 2> /dev/null && ! hash wget 2> /dev/null; then
+				echo "curl or wget is required for install.sh." >&2
+				return 1
+			fi
+			if [ "$action" = "install" ]; then
+				echo "Installing Codex via install.sh"
+				if [ "$installed" -eq 1 ] && [ -n "$requested_method" ] && [ "$requested_method" != "$detected_method" ]; then
+					echo "Existing Codex install detected via $detected_method; switching to install.sh will not remove the old install."
+				fi
+			else
+				echo "Updating Codex via install.sh"
+			fi
+			[ "$dry_run" -eq 1 ] || curl -fsSL https://github.com/openai/codex/releases/latest/download/install.sh | sh -s -- "$version"
+			;;
+	esac
+}
+
+alias codex-update='codex_update'
+alias codex-install='codex_update'
+
 #enable bash completion for this
 complete -c wcat
 function wcat {
