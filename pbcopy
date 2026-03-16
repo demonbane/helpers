@@ -1,0 +1,413 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+clipboard_wrapper_version="1.0.0"
+
+clipboard_die() {
+  if [ $# -gt 0 ]; then
+    printf '%s\n' "$*" >&2
+  fi
+  exit 1
+}
+
+clipboard_is_wsl() {
+  [ -n "${WSL_DISTRO_NAME:-}" ] || [ -n "${WSL_INTEROP:-}" ] || grep -qi microsoft /proc/version 2>/dev/null
+}
+
+clipboard_platform() {
+  local uname_s
+  uname_s="$(uname -s)"
+
+  case "$uname_s" in
+    Darwin)
+      printf '%s\n' macos
+      ;;
+    Linux)
+      if clipboard_is_wsl; then
+        printf '%s\n' wsl
+      else
+        printf '%s\n' linux
+      fi
+      ;;
+    CYGWIN*|MINGW*|MSYS*)
+      printf '%s\n' windows
+      ;;
+    *)
+      printf '%s\n' unknown
+      ;;
+  esac
+}
+
+clipboard_have() {
+  command -v "$1" >/dev/null 2>&1
+}
+
+clipboard_backend() {
+  case "$(clipboard_platform)" in
+    macos)
+      [ -x /usr/bin/pbcopy ] && printf '%s\n' macos && return 0
+      ;;
+    wsl)
+      if clipboard_have win32yank.exe; then
+        printf '%s\n' win32yank
+        return 0
+      fi
+      if clipboard_have powershell.exe; then
+        printf '%s\n' powershell
+        return 0
+      fi
+      ;;
+    linux)
+      if [ -n "${WAYLAND_DISPLAY:-}" ] && clipboard_have wl-copy && clipboard_have wl-paste; then
+        printf '%s\n' wl-clipboard
+        return 0
+      fi
+      if [ -n "${DISPLAY:-}" ] && clipboard_have xclip; then
+        printf '%s\n' xclip
+        return 0
+      fi
+      if [ -n "${DISPLAY:-}" ] && clipboard_have xsel; then
+        printf '%s\n' xsel
+        return 0
+      fi
+      ;;
+    windows)
+      if clipboard_have win32yank.exe; then
+        printf '%s\n' win32yank
+        return 0
+      fi
+      if clipboard_have powershell.exe; then
+        printf '%s\n' powershell
+        return 0
+      fi
+      ;;
+  esac
+
+  return 1
+}
+
+clipboard_print_install_hints() {
+  case "$(clipboard_platform)" in
+    linux)
+      printf '%s\n' "Install one of:"
+      printf '%s\n' "  Ubuntu/Debian: apt install wl-clipboard xclip xsel"
+      printf '%s\n' "  Fedora/RHEL:   dnf install wl-clipboard xclip xsel"
+      printf '%s\n' "  Arch:          pacman -S wl-clipboard xclip xsel"
+      ;;
+    wsl|windows)
+      printf '%s\n' "Preferred backend: install win32yank.exe somewhere on PATH."
+      printf '%s\n' "Fallback backend: powershell.exe is also supported when available."
+      ;;
+    macos)
+      printf '%s\n' "macOS should provide /usr/bin/pbcopy and /usr/bin/pbpaste."
+      ;;
+    *)
+      printf '%s\n' "No installation hint is available for this platform."
+      ;;
+  esac
+}
+
+clipboard_backend_note() {
+  local backend
+  backend="${1:-}"
+
+  case "$(clipboard_platform):$backend" in
+    wsl:powershell|windows:powershell)
+      printf '%s\n' "Note: using the PowerShell fallback. Install win32yank.exe for a simpler, purpose-built clipboard bridge."
+      ;;
+    linux:xclip)
+      if [ -n "${WAYLAND_DISPLAY:-}" ]; then
+        printf '%s\n' "Note: using xclip under Wayland compatibility. Install wl-clipboard for the native Wayland path."
+      fi
+      ;;
+    linux:xsel)
+      if [ -n "${WAYLAND_DISPLAY:-}" ]; then
+        printf '%s\n' "Note: using xsel under Wayland compatibility. Install wl-clipboard for the native Wayland path."
+      fi
+      ;;
+  esac
+}
+
+clipboard_missing_backend_message() {
+  printf '%s\n' "No supported clipboard backend was found for $(clipboard_platform)."
+  clipboard_print_install_hints
+}
+
+clipboard_print_version() {
+  local backend
+  backend="$(clipboard_backend || true)"
+
+  printf '%s %s\n' "$mode" "$clipboard_wrapper_version"
+  printf '%s\n' "platform: $(clipboard_platform)"
+  printf '%s\n' "backend: ${backend:-unavailable}"
+
+  if [ -n "$backend" ]; then
+    clipboard_backend_note "$backend"
+  else
+    clipboard_print_install_hints
+  fi
+}
+
+clipboard_print_help() {
+  case "$mode" in
+    pbcopy)
+      cat <<'EOF'
+Usage: pbcopy [-h|--help] [-v|--version] [-c|--clear] [FILE]
+
+Copy text to the clipboard.
+
+Arguments:
+  FILE                  Read clipboard contents from FILE instead of stdin.
+
+Options:
+  -c, --clear           Empty the clipboard.
+  -h, --help            Show this help.
+  -v, --version         Show version and platform information.
+EOF
+      ;;
+    pbpaste)
+      cat <<'EOF'
+Usage: pbpaste [-h|--help] [-v|--version] [-n|--no-newline] [FILE]
+
+Print clipboard text to stdout, or write it to FILE.
+
+Arguments:
+  FILE                  Write clipboard contents to FILE instead of stdout.
+
+Options:
+  -n, --no-newline      Remove one trailing newline, if present.
+      --chomp           Alias for -n.
+  -h, --help            Show this help.
+  -v, --version         Show version and platform information.
+EOF
+      ;;
+    *)
+      clipboard_die "Unsupported invocation: $mode"
+      ;;
+  esac
+}
+
+clipboard_backend_copy() {
+  local backend
+  backend="$1"
+
+  case "$backend" in
+    macos)
+      /usr/bin/pbcopy
+      ;;
+    wl-clipboard)
+      wl-copy --type text/plain;charset=utf-8
+      ;;
+    xclip)
+      xclip -in -selection clipboard
+      ;;
+    xsel)
+      xsel --clipboard --input
+      ;;
+    win32yank)
+      win32yank.exe -i --crlf
+      ;;
+    powershell)
+      powershell.exe -NoLogo -NoProfile -NonInteractive -Command '[Console]::InputEncoding = [System.Text.UTF8Encoding]::new($false); $text = [Console]::In.ReadToEnd(); Set-Clipboard -Value $text'
+      ;;
+    *)
+      clipboard_die "Unsupported clipboard backend: $backend"
+      ;;
+  esac
+}
+
+clipboard_backend_paste() {
+  local backend
+  backend="$1"
+
+  case "$backend" in
+    macos)
+      /usr/bin/pbpaste
+      ;;
+    wl-clipboard)
+      wl-paste
+      ;;
+    xclip)
+      xclip -out -selection clipboard
+      ;;
+    xsel)
+      xsel --clipboard --output
+      ;;
+    win32yank)
+      win32yank.exe -o --lf
+      ;;
+    powershell)
+      powershell.exe -NoLogo -NoProfile -NonInteractive -Command '[Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false); $text = Get-Clipboard -Raw; if ($null -ne $text) { $text = $text -replace "`r`n", "`n"; [Console]::Write($text) }'
+      ;;
+    *)
+      clipboard_die "Unsupported clipboard backend: $backend"
+      ;;
+  esac
+}
+
+clipboard_emit_with_chomp() {
+  local input_file output_file byte_count last_byte_hex
+  input_file="$1"
+  output_file="$2"
+  byte_count="$(wc -c < "$input_file")"
+
+  if [ "$byte_count" -eq 0 ]; then
+    : > "$output_file"
+    return 0
+  fi
+
+  last_byte_hex="$(tail -c 1 "$input_file" | od -An -t x1 | tr -d '[:space:]')"
+  if [ "$last_byte_hex" = "0a" ]; then
+    head -c "$((byte_count - 1))" "$input_file" > "$output_file"
+  else
+    cat "$input_file" > "$output_file"
+  fi
+}
+
+clipboard_copy_main() {
+  local input_file backend
+  input_file=""
+
+  while [ $# -gt 0 ]; do
+    case "$1" in
+      -h|--help)
+        clipboard_print_help
+        return 0
+        ;;
+      -v|--version)
+        clipboard_print_version
+        return 0
+        ;;
+      -c|--clear)
+        input_file="/dev/null"
+        shift
+        ;;
+      --)
+        shift
+        break
+        ;;
+      -*)
+        clipboard_die "Unknown option for pbcopy: $1"
+        ;;
+      *)
+        if [ -n "$input_file" ]; then
+          clipboard_die "pbcopy accepts at most one FILE argument."
+        fi
+        input_file="$1"
+        shift
+        ;;
+    esac
+  done
+
+  if [ $# -gt 1 ]; then
+    clipboard_die "pbcopy accepts at most one FILE argument."
+  fi
+  if [ $# -eq 1 ]; then
+    if [ -n "$input_file" ]; then
+      clipboard_die "pbcopy accepts at most one FILE argument."
+    fi
+    input_file="$1"
+  fi
+
+  if [ -z "$input_file" ]; then
+    input_file="-"
+  elif [ "$input_file" != "/dev/null" ] && [ ! -r "$input_file" ]; then
+    clipboard_die "Cannot read input file: $input_file"
+  fi
+
+  backend="$(clipboard_backend || true)"
+  [ -n "$backend" ] || clipboard_die "$(clipboard_missing_backend_message)"
+
+  if [ "$input_file" = "-" ]; then
+    clipboard_backend_copy "$backend"
+  else
+    clipboard_backend_copy "$backend" < "$input_file"
+  fi
+}
+
+clipboard_paste_main() {
+  local output_file chomp backend tmp_file
+  output_file=""
+  chomp=0
+
+  while [ $# -gt 0 ]; do
+    case "$1" in
+      -h|--help)
+        clipboard_print_help
+        return 0
+        ;;
+      -v|--version)
+        clipboard_print_version
+        return 0
+        ;;
+      -n|--chomp|--no-newline)
+        chomp=1
+        shift
+        ;;
+      --clear)
+        clipboard_die "--clear is only supported by pbcopy."
+        ;;
+      --)
+        shift
+        break
+        ;;
+      -*)
+        clipboard_die "Unknown option for pbpaste: $1"
+        ;;
+      *)
+        if [ -n "$output_file" ]; then
+          clipboard_die "pbpaste accepts at most one FILE argument."
+        fi
+        output_file="$1"
+        shift
+        ;;
+    esac
+  done
+
+  if [ $# -gt 1 ]; then
+    clipboard_die "pbpaste accepts at most one FILE argument."
+  fi
+  if [ $# -eq 1 ]; then
+    if [ -n "$output_file" ]; then
+      clipboard_die "pbpaste accepts at most one FILE argument."
+    fi
+    output_file="$1"
+  fi
+
+  backend="$(clipboard_backend || true)"
+  [ -n "$backend" ] || clipboard_die "$(clipboard_missing_backend_message)"
+
+  if [ "$chomp" -eq 0 ] && [ -z "$output_file" ]; then
+    clipboard_backend_paste "$backend"
+    return 0
+  fi
+
+  tmp_file="$(mktemp)"
+  trap "rm -f -- '$tmp_file'" EXIT
+  clipboard_backend_paste "$backend" > "$tmp_file"
+
+  if [ "$chomp" -eq 1 ]; then
+    if [ -n "$output_file" ]; then
+      clipboard_emit_with_chomp "$tmp_file" "$output_file"
+    else
+      clipboard_emit_with_chomp "$tmp_file" /dev/stdout
+    fi
+  elif [ -n "$output_file" ]; then
+    cat "$tmp_file" > "$output_file"
+  fi
+}
+
+mode="$(basename "$0")"
+
+case "$mode" in
+  pbcopy)
+    clipboard_copy_main "$@"
+    ;;
+  pbpaste)
+    clipboard_paste_main "$@"
+    ;;
+  *)
+    clipboard_die "Unsupported invocation: $mode"
+    ;;
+esac
