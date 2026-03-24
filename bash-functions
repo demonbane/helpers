@@ -245,6 +245,108 @@ function codex_update {
 alias codex-update='codex_update'
 alias codex-install='codex_update'
 
+function mise_update {
+	local parsed_args mise_path install_path version dry_run current_version requested_version
+
+	parsed_args="$(getopt -o hn --long help,dry-run -- "$@")" || return 2
+	eval set -- "$parsed_args"
+
+	dry_run=0
+	while true; do
+		case "$1" in
+			-h|--help)
+				echo "Usage: ${FUNCNAME[0]} [--dry-run] [VERSION]"
+				echo "Update Mise if installed, or install it if missing."
+				echo
+				echo "Uses the standalone https://mise.run installer and never edits shell rc files."
+				echo "If VERSION is given, the standalone installer receives MISE_VERSION and updates use 'mise self-update VERSION'."
+				return 0
+				;;
+			-n|--dry-run)
+				dry_run=1
+				shift
+				;;
+			--)
+				shift
+				break
+				;;
+			*)
+				echo "Unexpected option parsing state: $1" >&2
+				return 2
+				;;
+		esac
+	done
+
+	version="${1:-latest}"
+	if [ $# -gt 1 ]; then
+		echo "Too many arguments." >&2
+		return 2
+	fi
+
+	mise_path="$(command -v mise 2>/dev/null || true)"
+	if [ -n "$mise_path" ]; then
+		current_version="$(mise --version 2>/dev/null | sed -n 's/^mise[[:space:]]\+//p' | head -n 1)"
+		if [ "$version" != "latest" ]; then
+			requested_version="${version#v}"
+			if [ -n "$current_version" ] && [ "$current_version" = "$requested_version" ]; then
+				echo "Mise is already at $current_version; nothing to do."
+				return 0
+			fi
+		fi
+
+		echo "Updating Mise via self-update"
+		if [ "$dry_run" -eq 1 ]; then
+			if [ "$version" = "latest" ]; then
+				echo "DRY RUN: mise self-update --yes"
+			else
+				echo "DRY RUN: mise self-update --yes ${version#v}"
+			fi
+			return 0
+		fi
+
+		if [ "$version" = "latest" ]; then
+			mise self-update --yes
+		else
+			mise self-update --yes "${version#v}"
+		fi
+		return $?
+	fi
+
+	if ! hash curl 2> /dev/null && ! hash wget 2> /dev/null; then
+		echo "curl or wget is required to install Mise." >&2
+		return 1
+	fi
+
+	install_path="${MISE_INSTALL_PATH:-$HOME/.local/bin/mise}"
+	echo "Installing Mise via https://mise.run"
+	echo "Install path: $install_path"
+	if [ "$dry_run" -eq 1 ]; then
+		if [ "$version" = "latest" ]; then
+			echo "DRY RUN: install latest Mise with MISE_INSTALL_PATH=$install_path"
+		else
+			echo "DRY RUN: install Mise $version with MISE_INSTALL_PATH=$install_path"
+		fi
+		return 0
+	fi
+
+	if hash curl 2> /dev/null; then
+		if [ "$version" = "latest" ]; then
+			curl https://mise.run | env MISE_INSTALL_PATH="$install_path" sh
+		else
+			curl https://mise.run | env MISE_INSTALL_PATH="$install_path" MISE_VERSION="v${version#v}" sh
+		fi
+	else
+		if [ "$version" = "latest" ]; then
+			wget -qO- https://mise.run | env MISE_INSTALL_PATH="$install_path" sh
+		else
+			wget -qO- https://mise.run | env MISE_INSTALL_PATH="$install_path" MISE_VERSION="v${version#v}" sh
+		fi
+	fi
+}
+
+alias mise-update='mise_update'
+alias mise-install='mise_update'
+
 #enable bash completion for this
 complete -c wcat
 function wcat {
